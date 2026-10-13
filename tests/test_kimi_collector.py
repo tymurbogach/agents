@@ -161,10 +161,10 @@ class KimiCollectorTests(unittest.TestCase):
             },
         })
 
-        self.assertEqual([item["label"] for item in limits], ["Weekly (7-day)", "Session (5-hour)"])
-        self.assertEqual(limits[0]["percent"], 1.0)
-        self.assertEqual(limits[0]["resetsAt"], "2026-10-03T09:36:34.494238Z")
-        self.assertEqual(limits[1]["percent"], 0.0)
+        self.assertEqual([item["label"] for item in limits], ["Session (5-hour)", "Weekly (7-day)"])
+        self.assertEqual(limits[0]["percent"], 0.0)
+        self.assertEqual(limits[1]["percent"], 1.0)
+        self.assertEqual(limits[1]["resetsAt"], "2026-10-03T09:36:34.494238Z")
 
     def test_limits_read_used_when_present(self):
         limits = collector.limits_from_usage_payload({
@@ -174,8 +174,9 @@ class KimiCollectorTests(unittest.TestCase):
             "usages": {},
         })
 
-        self.assertEqual(limits[0]["percent"], 0.12)
-        self.assertEqual(limits[1]["percent"], 0.47)
+        self.assertEqual([item["label"] for item in limits], ["Session (5-hour)", "Weekly (7-day)"])
+        self.assertEqual(limits[0]["percent"], 0.47)
+        self.assertEqual(limits[1]["percent"], 0.12)
 
     def test_limits_fall_back_to_display_ratios_only(self):
         limits = collector.limits_from_usage_payload({"usages": {
@@ -236,10 +237,10 @@ class KimiCollectorTests(unittest.TestCase):
             },
         })
 
-        self.assertEqual([item["label"] for item in limits], ["Weekly (7-day)", "Session (5-hour)"])
-        # Weekly comes from the authoritative pool, not the display ratio.
-        self.assertEqual(limits[0]["percent"], 0.8)
-        self.assertEqual(limits[1]["percent"], 0.47)
+        self.assertEqual([item["label"] for item in limits], ["Session (5-hour)", "Weekly (7-day)"])
+        # Session comes from the display ratio, Weekly from the authoritative pool.
+        self.assertEqual(limits[0]["percent"], 0.47)
+        self.assertEqual(limits[1]["percent"], 0.8)
 
     def test_credential_needs_refresh_uses_cli_threshold(self):
         import time as time_module

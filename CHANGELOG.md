@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+- `collectors/kimi.py`: limits are emitted in canonical order (Session,
+  Weekly, Monthly) like the other collectors; the weekly pool no longer
+  lands above the session window.
+- `Panel.qml`: `limitWindows` sorts windows into the same canonical order
+  (Session, Weekly, Monthly, anything else last in record order), so an
+  external record that lists Weekly first still renders like the rest.
 - Plugin id `cyberdyne.agents` is now `tymurbogach.agents` (v1.2.3).
   Reinstall required: remove the old id, add the new one, put it back on the
   bar. Provider settings live on the bar entry, so re-apply them after the

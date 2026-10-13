@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[1]
 
 PANEL_FUNCTIONS = ["windowIsLong", "windowSpanMs", "labelTalksAboutTime", "windowTitle", "limitWindow",
-                   "limitWindows", "currencyPrefix", "formatMoney", "recordAgeText"]
+                   "limitRank", "limitWindows", "currencyPrefix", "formatMoney", "recordAgeText"]
 MAIN_FUNCTIONS = ["numberValue", "updateRank", "mergeUpdateAgentIds", "combineNumber", "formatTokenCount",
                    "collectorId", "hasLocalCollector", "updateCommand", "authHelpTextForRecord", "recordUpdatedMs"]
 
@@ -61,6 +61,9 @@ check("codex golden drops stale hint", authHelpTextForRecord({usageStatusText: "
 check("limits null keeps help", authHelpTextForRecord({usageStatusText: "", authHelpText: "Run `codex login` to authenticate.", limits: null}) === "Run `codex login` to authenticate.");
 check("infinite percent dropped", limitWindows({limits: [{label: "5h", percent: 1/0}]}).length === 0);
 check("finite percent kept", limitWindows({limits: [{label: "5h", percent: 0.5, resetsAt: "", title: ""}]})[0].percent === 0.5);
+check("limits order session weekly monthly", JSON.stringify(limitWindows({limits: [{label: "Monthly", percent: 0.1, resetsAt: ""}, {label: "Weekly (7-day)", percent: 0.5, resetsAt: ""}, {label: "Session (5-hour)", percent: 0.2, resetsAt: ""}]}).map(function(w) { return w.title })) === '["Session","Weekly","Monthly"]');
+check("limits abbreviated session sorts first", JSON.stringify(limitWindows({limits: [{label: "Weekly (7-day)", percent: 0.5, resetsAt: ""}, {label: "5h window", percent: 0.2, resetsAt: ""}]}).map(function(w) { return w.title })) === '["Session","Weekly"]');
+check("limits unknown keeps record order last", JSON.stringify(limitWindows({limits: [{label: "Zeta", percent: 0.1, resetsAt: "", title: "Zeta"}, {label: "Weekly (7-day)", percent: 0.5, resetsAt: ""}, {label: "Alpha", percent: 0.2, resetsAt: "", title: "Alpha"}]}).map(function(w) { return w.title })) === '["Weekly","Zeta","Alpha"]');
 check("updatedMs prefers Ms field", recordUpdatedMs({updatedAtMs: 123, updatedAt: "2026-01-01T00:00:00.000Z"}) === 123);
 check("updatedMs falls back to ISO", recordUpdatedMs({updatedAt: "2026-01-01T00:00:00.000Z"}) === Date.parse("2026-01-01T00:00:00.000Z"));
 check("updatedMs unknown is zero", recordUpdatedMs({}) === 0);

@@ -159,15 +159,33 @@ Panel {
     }
   }
 
+  // Display order shared with the collectors: the short session window
+  // first, then the weekly pool, then the monthly one. Any other window
+  // (model-scoped, future) keeps its record order at the end, so an
+  // external record that lists Weekly first still reads like the rest.
+  function limitRank(title) {
+    if (title === "Session") return 0
+    if (title === "Weekly") return 1
+    if (title === "Monthly") return 2
+    return 3
+  }
+
   function limitWindows(p) {
     if (!p) return []
-    var out = []
+    var decorated = []
     var list = p.limits || []
     for (var i = 0; i < list.length; i++) {
       var entry = list[i] || {}
       var percent = Number(entry.percent)
-      if (isFinite(percent) && percent >= 0) out.push(limitWindow(entry.label, percent, entry.resetsAt, entry.title))
+      if (isFinite(percent) && percent >= 0)
+        decorated.push({ window: limitWindow(entry.label, percent, entry.resetsAt, entry.title), position: i })
     }
+    decorated.sort(function(a, b) {
+      var rank = limitRank(a.window.title) - limitRank(b.window.title)
+      return rank !== 0 ? rank : a.position - b.position
+    })
+    var out = []
+    for (var k = 0; k < decorated.length; k++) out.push(decorated[k].window)
     return out
   }
 

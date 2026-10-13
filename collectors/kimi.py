@@ -842,6 +842,17 @@ def window_label_for_duration(duration: Any, unit: Any) -> str:
     return ""
 
 
+# Display order shared with the other collectors: the short session window
+# first, then the weekly pool, then the monthly one. Unknown labels keep
+# their relative order at the end.
+CANONICAL_LIMIT_ORDER = ("Session (5-hour)", "Weekly (7-day)", "Monthly")
+
+
+def sort_limits(limits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rank = {label: index for index, label in enumerate(CANONICAL_LIMIT_ORDER)}
+    return sorted(limits, key=lambda entry: rank.get(entry["label"], len(rank)))
+
+
 def limits_from_usage_payload(payload: dict[str, Any]) -> list[dict[str, Any]]:
     # The `usages.*.used_ratio` block feeds the CLI's /usage display but stays
     # at zero while the server enforces the quota, so it only fills windows
@@ -897,7 +908,7 @@ def limits_from_usage_payload(payload: dict[str, Any]) -> list[dict[str, Any]]:
             if not isinstance(entry, dict):
                 continue
             add(label, finite_ratio(entry.get("used_ratio")), entry.get("reset_time"))
-    return limits
+    return sort_limits(limits)
 
 
 def collect(force: bool, limits_only: bool) -> dict[str, Any]:
