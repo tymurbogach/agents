@@ -1,6 +1,14 @@
 # Changelog
 
 ## Unreleased
+- `Panel.qml` + `Main.qml`: while the panel sits open, the visible tab
+  re-pulls its limits every 60 s through scoped `refreshLimitsFor`, and
+  switching tabs re-pulls the newly visible one; opening still refreshes
+  everything. A hung collector can no longer stall the other tabs behind the
+  sequential queue. Day/model totals still follow the background tick or a
+  manual refresh.
+- `collectors/codex.py`: per-attempt subprocess timeout 30 s → 20 s (the
+  three retries stay), bounding a hung RPC stall to ~63 s.
 - `collectors/kimi.py`: limits are emitted in canonical order (Session,
   Weekly, Monthly) like the other collectors; the weekly pool no longer
   lands above the session window.

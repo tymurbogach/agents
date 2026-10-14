@@ -393,7 +393,10 @@ Panel {
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  onProviderIndexChanged: if (panelFlick) panelFlick.contentY = 0
+  onProviderIndexChanged: {
+    if (panelFlick) panelFlick.contentY = 0
+    if (root.opened && root.provider) usage.refreshLimitsFor([root.provider.providerId])
+  }
   onOpenedChanged: if (opened) {
     cursorActive = false
     defaultHint = ""
@@ -415,6 +418,22 @@ Panel {
     running: root.opened
     repeat: true
     onTriggered: root.nowMs = Date.now()
+  }
+
+  // The Codex terminal moves its own counters on every reply while this
+  // panel would sit on the open-time snapshot until the 15-minute tick:
+  // re-pull the visible tab's cheap limits-only endpoints once a minute
+  // while open. Scoped to the visible provider so one hung collector cannot
+  // stall the others behind the queue. runUpdate() collapses into one
+  // pending slot when busy, so this never stacks requests.
+  Timer {
+    interval: 60000
+    running: root.opened
+    repeat: true
+    onTriggered: {
+      if (root.provider) usage.refreshLimitsFor([root.provider.providerId])
+      else usage.refreshLimits()
+    }
   }
 
   IpcHandler {

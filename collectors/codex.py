@@ -82,7 +82,7 @@ def command_args(force: bool, limits_only: bool) -> list[str]:
 def run_once(force: bool, limits_only: bool) -> dict[str, Any] | None:
     try:
         result = subprocess.run(
-            command_args(force, limits_only), capture_output=True, text=True, timeout=30, check=False
+            command_args(force, limits_only), capture_output=True, text=True, timeout=20, check=False
         )
     except (OSError, subprocess.TimeoutExpired):
         return None

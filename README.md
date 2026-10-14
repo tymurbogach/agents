@@ -34,6 +34,7 @@ The icon appears on its own the first time usage is found. With no agents record
 | Right-click chip | Hide it (`+N` restores) |
 | `h` / `l`, `j` / `k` | Switch tab, scroll |
 | `r` or Enter | Refresh now |
+| Panel left open | Visible subscription re-pulls limits every 60 s; day/model totals follow the 15 min tick or `r` |
 
 Tabs appear only for enabled agents with recorded usage. Hiding also stops their scans.
 

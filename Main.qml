@@ -458,6 +458,13 @@ Item {
   // recent scans in this mode.
   function refreshLimits() { runUpdate("limits") }
 
+  // Same, but scoped to the visible tab: while the panel sits open the
+  // minute-tick only re-pulls what the user is reading, so a hung Codex RPC
+  // cannot stall Kimi/OpenCode behind the sequential custom queue, and
+  // Fireworks (no cache, full scan every run) is not re-scanned for hidden
+  // tabs. Switching tabs re-pulls the newly visible one.
+  function refreshLimitsFor(agentIds) { runUpdate("limits", agentIds) }
+
   // ------------------------------------------------------------- providers
 
   // An agent earns a place in the bar and the panel by being switched on in
