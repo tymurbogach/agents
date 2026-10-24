@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+- `collectors/opencode.py`: `oauth_session` reads the Console OAuth token
+  from the `credential` table (`integration_id 'opencode'`) first and falls
+  back to the legacy `account`/`account_state` tables. Current OpenCode
+  rotates the credential table while the legacy rows go stale, which showed
+  `OpenCode account session expired` with frozen cached limits even while
+  `opencode auth list` stayed logged in.
 - `Panel.qml` + `Main.qml`: while the panel sits open, the visible tab
   re-pulls its limits every 60 s through scoped `refreshLimitsFor`, and
   switching tabs re-pulls the newly visible one; opening still refreshes

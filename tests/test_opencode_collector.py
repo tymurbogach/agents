@@ -111,6 +111,27 @@ class OpenCodeCollectorTests(unittest.TestCase):
 
         self.assertEqual(collector.oauth_session(path), ("secret", "org_test"))
 
+    def test_oauth_session_prefers_credential_table_over_legacy_account(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        path = Path(directory.name) / "opencode.db"
+        connection = sqlite3.connect(path)
+        connection.executescript("""
+            CREATE TABLE account (id text primary key, access_token text not null);
+            CREATE TABLE account_state (active_account_id text, active_org_id text);
+            CREATE TABLE credential (id text PRIMARY KEY, integration_id text, label text NOT NULL, value text NOT NULL, connector_id text, method_id text, active integer, time_created integer NOT NULL, time_updated integer NOT NULL);
+        """)
+        connection.execute("INSERT INTO account VALUES (?, ?)", ("user", "st_stale"))
+        connection.execute("INSERT INTO account_state VALUES (?, ?)", ("user", "org_stale"))
+        fresh = json.dumps({"type": "oauth", "access": "st_fresh", "refresh": "rt_fresh",
+                            "expires": 1794679171187, "metadata": {"orgID": "org_fresh"}})
+        connection.execute("INSERT INTO credential VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                           ("cred1", "opencode", "Personal", fresh, None, None, 1, 0, 0))
+        connection.commit()
+        connection.close()
+
+        self.assertEqual(collector.oauth_session(path), ("st_fresh", "org_fresh"))
+
 
 if __name__ == "__main__":
     unittest.main()

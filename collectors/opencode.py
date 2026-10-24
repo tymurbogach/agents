@@ -306,14 +306,40 @@ def go_credential(path: Path) -> str:
 def oauth_session(path: Path) -> tuple[str, str]:
     """Return the active OpenCode Console access token and organization ID.
 
-    OpenCode's browser device flow stores this account in its SQLite database,
-    not in auth.json. The values stay in memory and never enter a record.
+    OpenCode stores the Console OAuth credential in the database
+    credential table (integration_id 'opencode'), not in auth.json. Older
+    databases also carry the legacy account/account_state tables, which go
+    stale once the CLI rotates into credential. Prefer credential and fall
+    back to the legacy tables. The values stay in memory and never enter a
+    record.
     """
     if not path.is_file():
         return "", ""
     try:
         connection = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
         try:
+            try:
+                row = connection.execute(
+                    """
+                    SELECT value FROM credential
+                    WHERE integration_id IN ('opencode', 'opencode-go')
+                    ORDER BY CASE WHEN active = 1 THEN 0 ELSE 1 END, time_updated DESC
+                    LIMIT 1
+                    """
+                ).fetchone()
+            except sqlite3.Error:
+                row = None
+            if row:
+                try:
+                    value = json.loads(row[0]) if isinstance(row[0], str) else None
+                except (TypeError, json.JSONDecodeError):
+                    value = None
+                if isinstance(value, dict):
+                    token = value.get("access")
+                    metadata = value.get("metadata") if isinstance(value.get("metadata"), dict) else {}
+                    organization = metadata.get("orgID") if isinstance(metadata, dict) else ""
+                    if isinstance(token, str) and token.strip() and isinstance(organization, str) and organization.strip():
+                        return token.strip(), organization.strip()
             row = connection.execute(
                 """
                 SELECT account.access_token, account_state.active_org_id
